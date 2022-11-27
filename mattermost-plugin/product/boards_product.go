@@ -11,6 +11,7 @@ import (
 	"github.com/mattermost/focalboard/server/model"
 
 	"github.com/mattermost/mattermost-server/v6/app"
+	"github.com/mattermost/mattermost-server/v6/einterfaces"
 	mm_model "github.com/mattermost/mattermost-server/v6/model"
 	"github.com/mattermost/mattermost-server/v6/plugin"
 	"github.com/mattermost/mattermost-server/v6/product"
@@ -74,7 +75,7 @@ type boardsProduct struct {
 }
 
 func newBoardsProduct(_ *app.Server, services map[app.ServiceKey]interface{}) (app.Product, error) {
-	boards := &boardsProduct{}
+	boardsProduct := &boardsProduct{}
 
 	for key, service := range services {
 		switch key {
@@ -83,118 +84,134 @@ func newBoardsProduct(_ *app.Server, services map[app.ServiceKey]interface{}) (a
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.teamService = teamService
+			boardsProduct.teamService = teamService
 		case app.ChannelKey:
 			channelService, ok := service.(product.ChannelService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.channelService = channelService
+			boardsProduct.channelService = channelService
 		case app.UserKey:
 			userService, ok := service.(product.UserService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.userService = userService
+			boardsProduct.userService = userService
 		case app.PostKey:
 			postService, ok := service.(product.PostService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.postService = postService
+			boardsProduct.postService = postService
 		case app.PermissionsKey:
 			permissionsService, ok := service.(product.PermissionService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.permissionsService = permissionsService
+			boardsProduct.permissionsService = permissionsService
 		case app.BotKey:
 			botService, ok := service.(product.BotService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.botService = botService
+			boardsProduct.botService = botService
 		case app.ClusterKey:
 			clusterService, ok := service.(product.ClusterService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.clusterService = clusterService
+			boardsProduct.clusterService = clusterService
 		case app.ConfigKey:
 			configService, ok := service.(product.ConfigService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.configService = configService
+			boardsProduct.configService = configService
 		case app.LogKey:
 			logger, ok := service.(mlog.LoggerIFace)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.logger = logger.With(mlog.String("product", boardsProductName))
+			boardsProduct.logger = logger.With(mlog.String("product", boardsProductName))
 		case app.LicenseKey:
 			licenseService, ok := service.(product.LicenseService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.licenseService = licenseService
+			boardsProduct.licenseService = licenseService
 		case app.FilestoreKey:
 			filestoreService, ok := service.(product.FilestoreService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.filestoreService = filestoreService
+			boardsProduct.filestoreService = filestoreService
 		case app.FileInfoStoreKey:
 			fileInfoStoreService, ok := service.(product.FileInfoStoreService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.fileInfoStoreService = fileInfoStoreService
+			boardsProduct.fileInfoStoreService = fileInfoStoreService
 		case app.RouterKey:
 			routerService, ok := service.(product.RouterService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.routerService = routerService
+			boardsProduct.routerService = routerService
 		case app.CloudKey:
 			cloudService, ok := service.(product.CloudService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.cloudService = cloudService
+			boardsProduct.cloudService = cloudService
 		case app.KVStoreKey:
 			kvStoreService, ok := service.(product.KVStoreService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.kvStoreService = kvStoreService
+			boardsProduct.kvStoreService = kvStoreService
 		case app.StoreKey:
 			storeService, ok := service.(product.StoreService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.storeService = storeService
+			boardsProduct.storeService = storeService
 		case app.SystemKey:
 			systemService, ok := service.(product.SystemService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.systemService = systemService
+			boardsProduct.systemService = systemService
 		case app.PreferencesKey:
 			preferencesService, ok := service.(product.PreferencesService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.preferencesService = preferencesService
+			boardsProduct.preferencesService = preferencesService
 		case app.HooksKey:
 			hooksService, ok := service.(product.HooksService)
 			if !ok {
 				return nil, fmt.Errorf("invalid service key '%s': %w", key, errServiceTypeAssert)
 			}
-			boards.hooksService = hooksService
+			boardsProduct.hooksService = hooksService
 		}
 	}
-	return boards, nil
+
+	if !boardsProduct.configService.Config().FeatureFlags.BoardsProduct {
+		boardsProduct.logger.Info("Boards product disabled via feature flag")
+		return boardsProduct, nil
+	}
+
+	adapter := newServiceAPIAdapter(boardsProduct)
+	boardsApp, err := boards.NewBoardsApp(adapter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Boards service: %w", err)
+	}
+
+	model.LogServerInfo(boardsProduct.logger)
+
+	boardsProduct.boardsApp = boardsApp
+
+	return boardsProduct, nil
 }
 
 func (bp *boardsProduct) Start() error {
@@ -205,19 +222,10 @@ func (bp *boardsProduct) Start() error {
 
 	bp.logger.Info("Starting boards service")
 
-	adapter := newServiceAPIAdapter(bp)
-	boardsApp, err := boards.NewBoardsApp(adapter)
-	if err != nil {
-		return fmt.Errorf("failed to create Boards service: %w", err)
-	}
-
-	model.LogServerInfo(bp.logger)
-
 	if err := bp.hooksService.RegisterHooks(boardsProductName, bp); err != nil {
 		return fmt.Errorf("failed to register hooks: %w", err)
 	}
 
-	bp.boardsApp = boardsApp
 	if err := bp.boardsApp.Start(); err != nil {
 		return fmt.Errorf("failed to start Boards service: %w", err)
 	}
@@ -304,4 +312,11 @@ func (bp *boardsProduct) RunDataRetention(nowTime, batchSize int64) (int64, erro
 		return 0, nil
 	}
 	return bp.boardsApp.RunDataRetention(nowTime, batchSize)
+}
+
+func (bp *boardsProduct) Exporter(cursor map[string]any, limit int) (einterfaces.ComplianceExporter, map[string]any, error) {
+	if bp.boardsApp == nil {
+		return nil, nil, nil
+	}
+	return bp.boardsApp.Exporter(cursor, limit)
 }
